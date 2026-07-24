@@ -10,11 +10,11 @@
   }
 
   html {
-    @apply scroll-smooth antialiased;
+    @apply h-full scroll-smooth antialiased;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply h-full overflow-hidden bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }

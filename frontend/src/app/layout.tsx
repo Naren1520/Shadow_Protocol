@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background text-foreground antialiased">
+      <body className="h-screen overflow-hidden bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

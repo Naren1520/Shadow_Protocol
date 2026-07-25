@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "api": "https://dev.bcat.website/catalyst/api",
+  "projectId": 7,
+  "name": "ShadowProtocol",
+  "framework": "none"
+}

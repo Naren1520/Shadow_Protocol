@@ -1,350 +1,268 @@
-# ShadowProtocol - Enterprise Crime Intelligence Platform
-## Shadow Protocol | Karnataka Police CID Datathon 2026
+# ShadowProtocol
 
-> 🔴 **MANDATORY**: This project is **Zoho-sponsored**. All deployments **MUST use Catalyst by Zoho**.
-> See [docs/CATALYST_MANDATORY_DEPLOYMENT.md](docs/CATALYST_MANDATORY_DEPLOYMENT.md) for quick start.
-> Complete deployment guide: [docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md](docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md)
+ShadowProtocol is an enterprise-grade crime intelligence platform designed for the Karnataka Police CID. The system combines a modern web frontend, a scalable backend API, and a separate AI/ML service to support investigation workflows, analytics, and predictive capabilities.
 
----
+## Repository Overview
 
-## 📋 Table of Contents
+This repository contains three primary modules and supporting documentation:
 
-This is a **production-grade, enterprise-scale Crime Intelligence Platform** with complete documentation. Start here:
+- `frontend/` — Next.js 15 application for the user interface
+- `backend/` — Fastify + TypeScript backend API and domain logic
+- `ai-services/` — Python FastAPI service for AI and ML workflows
+- `docs/` — architecture, deployment, and implementation guides
+- `docker-compose.yml` — local orchestration definition
+- `README.md` — project overview and setup guide
 
-### 1. 📚 Architecture Documentation
-- **[docs/POLICE_DEPARTMENT_SCHEMA_MAPPING.md](docs/POLICE_DEPARTMENT_SCHEMA_MAPPING.md)** - ⭐ **START HERE** - Official police dataset (25+ tables, zero compromises)
-- **[docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md)** - Complete Next.js 15 frontend strategy
-- **[docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md)** - Node.js + Fastify backend patterns (uses police schema)
-- **[docs/AI_ML_ARCHITECTURE.md](docs/AI_ML_ARCHITECTURE.md)** - Python FastAPI + LLM integration
-- **[docs/CATALYST_MANDATORY_DEPLOYMENT.md](docs/CATALYST_MANDATORY_DEPLOYMENT.md)** - Catalyst deployment (✅ MANDATORY)
-- **[docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md](docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md)** - Complete Catalyst guide
-- **[docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md)** - 20-week phased execution plan
+## Module Descriptions
 
-### 2. 🎯 Quick Start
+### frontend/
+The frontend module contains the Next.js application and UI implementation.
 
-**For Frontend Developers:**
+Key files and directories:
+- `package.json` — frontend dependencies and scripts
+- `tsconfig.json` — TypeScript compiler options
+- `next.config.js` — Next.js configuration
+- `Dockerfile` — container image definition
+- `.env.local` — local environment variables (not tracked)
+- `src/app/` — application entrypoint and page routes
+- `src/app/auth/login/` — login page implementation
+- `src/app/dashboard/page.tsx` — dashboard landing page
+- `src/app/analytics/page.tsx` — analytics page
+- `src/app/cases/page.tsx` — cases page
+- `src/app/crimes/page.tsx` — crimes page
+- `src/app/network-analysis/page.tsx` — network analysis page
+- `src/modules/` — feature modules for auth, cases, crimes, dashboard
+- `src/shared/components/` — shared UI components and layout
+- `src/shared/services/api-client.ts` — API client logic
+- `src/shared/stores/auth-store.ts` — client-side auth state
+- `src/shared/types/` — shared TypeScript definitions
+- `public/` — static assets
+
+### backend/
+The backend module contains the API server, data layer, and domain modules.
+
+Key files and directories:
+- `.env.example` — backend environment template
+- `package.json` — backend dependencies and scripts
+- `tsconfig.json` / `tsconfig.seed.json` — TypeScript config files
+- `docker/Dockerfile` — backend container image definition
+- `prisma/schema.prisma` — database schema definition
+- `prisma/migrations/` — database migration history
+- `prisma/seed.ts` — initial data seeding script
+- `src/main.ts` — application bootstrap and server start
+- `src/app.ts` — Fastify application instance
+- `src/bootstrap/registerRoutes.ts` — route registration
+- `src/config/environment.ts` — runtime environment validation
+- `src/config/database.ts` — database connection configuration
+- `src/modules/auth/` — authentication domain logic
+- `src/modules/crimes/` — crime management domain
+- `src/modules/cases/` — case management domain
+- `src/modules/analytics/` — analytics endpoints and services
+- `src/modules/audit/` — audit logging implementation
+- `src/modules/accused/` — accused person management
+- `src/shared/middleware/` — auth middleware and error handling
+- `src/shared/types/` — shared backend types and interfaces
+- `src/shared/utils/pagination.ts` — pagination utility
+
+### ai-services/
+The AI services module is a standalone Python service for conversational AI, retrieval, and prediction.
+
+Key files and directories:
+- `.env.example` — AI service environment template
+- `requirements.txt` — Python dependencies
+- `pyproject.toml` — project metadata and dependency specification
+- `docker/Dockerfile` — AI service container image definition
+- `README.md` — AI service module documentation
+- `src/main.py` — FastAPI application entrypoint
+- `src/config/settings.py` — application settings and environment configuration
+- `src/routes/` — API routes for chat, analytics, prediction, and network analysis
+- `src/controllers/` — route controllers and handlers
+- `src/services/` — business logic, LLM, RAG, and vector search services
+- `src/schemas/` — request and response data models
+- `src/middleware/` — error handling and request logging
+- `src/utils/` — helper utilities
+- `src/database/` — vector database and persistence utilities
+- `src/models/` — model definitions and metadata
+
+### docs/
+The documentation folder contains architectural guidance, deployment instructions, and implementation planning.
+
+Key documents:
+- `docs/POLICE_DEPARTMENT_SCHEMA_MAPPING.md` — police data schema mapping
+- `docs/FRONTEND_ARCHITECTURE.md` — frontend architecture and patterns
+- `docs/BACKEND_ARCHITECTURE.md` — backend architecture and service design
+- `docs/AI_ML_ARCHITECTURE.md` — AI/ML architecture and integration guidance
+- `docs/CATALYST_MANDATORY_DEPLOYMENT.md` — mandatory Zoho Catalyst deployment guide
+- `docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md` — full Catalyst deployment infrastructure guide
+- `docs/DEPLOYMENT_INFRASTRUCTURE.md` — deployment infrastructure reference
+- `docs/IMPLEMENTATION_ROADMAP.md` — phased implementation timeline
+- `docs/Police_FIR_ER_Diagram.txt` / `.pdf` — ER diagram reference
+
+## Supported Operating Environment
+
+- Node.js 20 or later
+- pnpm or npm for JavaScript package management
+- Python 3.11 or later
+- PostgreSQL 15 or compatible
+- Redis 7 or compatible
+- Docker and Docker Compose for local development and containerization
+
+## Setup and Local Development
+
+### Clone the repository
+
 ```bash
-# See docs/FRONTEND_ARCHITECTURE.md for:
-- Next.js 15 App Router setup
-- Clean Architecture patterns
-- Component structure
-- State management (Zustand + React Query)
-- Design system (clean white theme)
-- Testing strategy
-```
-
-**For Backend Developers:**
-```bash
-# See docs/BACKEND_ARCHITECTURE.md for:
-- Fastify + TypeScript setup
-- Clean Architecture + DDD
-- Database design (Prisma)
-- RBAC implementation
-- Event-driven architecture
-- Security best practices
-```
-
-**For AI/ML Engineers:**
-```bash
-# See docs/AI_ML_ARCHITECTURE.md for:
-- FastAPI setup
-- LangChain + LLM integration
-- FAISS vector search
-- ML models (predictions, network analysis)
-- RAG pipeline
-- Explainability services
-```
-
-**For DevOps/Infrastructure:**
-```bash
-# See docs/CATALYST_MANDATORY_DEPLOYMENT.md (Quick Start) or
-# See docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md (Complete Guide) for:
-- Catalyst deployment architecture
-- All 16 Catalyst services configuration
-- CI/CD with Catalyst Pipelines
-- Monitoring & observability
-- Production deployment
-```
-
----
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────┐
-│  PRESENTATION (Next.js 15 + React 19)          │
-│  Dashboard | Maps | Analytics | Chat           │
-└────────────────────┬────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────┐
-│  APPLICATION (Fastify + Node.js)               │
-│  API | RBAC | Audit | WebSockets               │
-└────────────────────┬────────────────────────────┘
-                     │
-    ┌────────────────┼────────────────┐
-    │                │                │
-┌───▼────┐      ┌────▼────┐     ┌────▼───┐
-│ AI/ML  │      │Database │     │ Cache  │
-│ (Python│      │ (PgSQL) │     │ (Redis)│
-│FastAPI)│      └─────────┘     └────────┘
-└────────┘
-```
-
----
-
-## 🎨 Key Features Implemented
-
-### Crime Intelligence
-- ✅ FIR & Crime Management
-- ✅ Criminal Network Analysis (Graph visualization)
-- ✅ Crime Hotspot Detection (Geospatial maps)
-- ✅ Repeat Offender Identification
-- ✅ Behavioral Profiling
-
-### Analytics & Dashboards
-- ✅ Real-time KPI tracking
-- ✅ Crime statistics & trends
-- ✅ District-wise comparisons
-- ✅ Temporal analysis
-- ✅ Seasonal patterns
-
-### AI Features
-- ✅ Conversational AI (LangChain + LLM)
-- ✅ Predictive analytics
-- ✅ Anomaly detection
-- ✅ Case similarity matching
-- ✅ Explainable AI responses
-
-### Case Management
-- ✅ FIR tracking
-- ✅ Investigation timelines
-- ✅ Evidence management
-- ✅ Court proceedings
-- ✅ Chargesheet generation
-
-### Security & Compliance
-- ✅ JWT Authentication
-- ✅ Role-Based Access Control (8 roles)
-- ✅ Audit logging
-- ✅ Data encryption
-- ✅ SQL injection protection
-
----
-
-## 📊 Tech Stack at a Glance
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Next.js 15, React 19, TypeScript, TailwindCSS, ShadCN UI |
-| **Backend** | Node.js 20, Fastify, TypeScript, Prisma |
-| **AI/ML** | Python 3.11, FastAPI, LangChain, FAISS |
-| **Database** | PostgreSQL 15, Redis 7 |
-| **Deployment** | Docker, Kubernetes (AKS), Terraform |
-| **Monitoring** | Prometheus, Grafana, Loki |
-
----
-
-## 🚀 Implementation Timeline
-
-### Phase 1: Foundation (Week 1-4)
-- Infrastructure setup
-- Database design
-- Authentication & authorization
-- Base frontend & API
-
-### Phase 2: Core Features (Week 5-8)
-- Crime management
-- Case tracking
-- User administration
-- Reporting engine
-
-### Phase 3: Analytics (Week 9-12)
-- Crime dashboards
-- Hotspot mapping
-- Network analysis
-- Risk predictions
-
-### Phase 4: AI Assistant (Week 13-15)
-- LLM integration
-- RAG pipeline
-- Conversational interface
-- Multilingual support
-
-### Phase 5: Advanced Features (Week 16-18)
-- Behavioral profiling
-- Case recommendations
-- Performance optimization
-
-### Phase 6: Testing & Deployment (Week 19-20)
-- QA & security testing
-- Production deployment
-- Documentation
-
----
-
-## 📖 Complete Project Description
-
-This is an **enterprise-grade Crime Intelligence & Conversational AI Platform** for the Karnataka Police Criminal Investigation Department (CID). The platform transforms traditional crime record management into an intelligent, AI-driven decision support system.
-
-### Core Objectives
-1. **Unified Intelligence Platform**: Integrate crime records, FIRs, accused, victims, complainants, police stations, districts, evidence into one system
-2. **Crime Analytics**: Dashboard with KPIs, trends, district comparisons, real-time updates
-3. **Criminal Network Analysis**: Visualize relationships, identify organized crime groups, discover hidden links
-4. **Conversational AI**: Answer natural language questions in English & Kannada with evidence references
-5. **Predictive Analytics**: Crime risk prediction, anomaly detection, repeat offender identification, behavioral profiling
-6. **Case Management**: Investigation timelines, AI summaries, similar case recommendations
-7. **Professional Reporting**: PDF reports, templates, scheduling, digital signatures
-8. **Role-Based Security**: 8 user roles with fine-grained permissions, audit logging
-
-### Capabilities
-- 🔒 **Security**: Zero Trust, RBAC, JWT, encryption, audit trails
-- 📈 **Scalability**: 1M+ users, 100K concurrent sessions, millions of records
-- 🤖 **Intelligence**: AI predictions, network analysis, behavioral insights
-- 🗺️ **Geospatial**: Crime hotspot mapping, district drill-downs
-- 🔍 **Search**: Full-text search, semantic search, vector similarity
-- 📱 **Responsive**: Desktop, tablet, mobile optimized
-- 🌐 **Multilingual**: English & Kannada support
-- ♿ **Accessible**: WCAG 2.1 compliance
-
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Node.js 20 LTS
-- Python 3.11
-- Docker & Docker Compose
-- PostgreSQL 15
-- Redis 7
-
-### Local Development Setup
-```bash
-# 1. Clone repository
-git clone <repo-url>
+git clone https://github.com/Naren1520/Shadow_Protocol.git
 cd ShadowProtocol
-
-# 2. Install dependencies
-# Frontend
-cd frontend && pnpm install
-
-# Backend
-cd ../backend && pnpm install
-
-# AI Services
-cd ../ai-services && pip install -r requirements.txt
-
-# 3. Setup environment
-cp .env.example .env.local
-
-# 4. Start with Docker Compose
-docker-compose up -d
-
-# 5. Access applications
-# Frontend: http://localhost:3000
-# Backend: http://localhost:3001
-# AI Services: http://localhost:3002
-# Grafana: http://localhost:3003
 ```
 
----
+### Frontend
 
-## 📁 Repository Structure
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+The frontend runs by default on `http://localhost:3000`.
+
+### Backend
+
+```bash
+cd ../backend
+pnpm install
+cp .env.example .env
+# update the .env file with your database, Redis, and JWT values
+pnpm dev
+```
+
+The backend runs on the configured port, typically `http://localhost:3001`.
+
+### AI Service
+
+```bash
+cd ../ai-services
+pip install -r requirements.txt
+cp .env.example .env
+# set OPENAI_API_KEY if using LLM integration
+uvicorn src.main:app --reload --host 0.0.0.0 --port 3002
+```
+
+The AI service runs on `http://localhost:3002`.
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+This command starts the local integration stack. Verify the service ports and container status after startup.
+
+## Folder Structure
 
 ```
 ShadowProtocol/
-├── frontend/                  # Next.js 15 application
-├── backend/                   # Fastify backend API
-├── ai-services/              # Python FastAPI AI services
-├── kubernetes/               # K8s manifests
-├── terraform/                # Infrastructure as Code
-├── docker/                   # Docker configurations
-├── scripts/                  # Automation scripts
-├── FRONTEND_ARCHITECTURE.md  # Complete frontend guide
-├── BACKEND_ARCHITECTURE.md   # Complete backend guide
-├── AI_ML_ARCHITECTURE.md     # AI/ML implementation guide
-├── DEPLOYMENT_INFRASTRUCTURE.md # Deployment guide
-├── IMPLEMENTATION_ROADMAP.md # Project roadmap
-└── README.md                 # This file
+├── ai-services/
+│   ├── docker/
+│   │   └── Dockerfile
+│   ├── pyproject.toml
+│   ├── README.md
+│   ├── requirements.txt
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── settings.py
+│   │   ├── controllers/
+│   │   ├── database/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── main.py
+├── backend/
+│   ├── docker/
+│   │   └── Dockerfile
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   ├── .env.example
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tsconfig.seed.json
+│   ├── src/
+│   │   ├── app.ts
+│   │   ├── main.ts
+│   │   ├── bootstrap/
+│   │   ├── config/
+│   │   ├── modules/
+│   │   └── shared/
+├── docs/
+│   ├── AI_ML_ARCHITECTURE.md
+│   ├── BACKEND_ARCHITECTURE.md
+│   ├── CATALYST_MANDATORY_DEPLOYMENT.md
+│   ├── DEPLOYMENT_INFRASTRUCTURE.md
+│   ├── DEPLOYMENT_INFRASTRUCTURE_CATALYST.md
+│   ├── FRONTEND_ARCHITECTURE.md
+│   ├── IMPLEMENTATION_ROADMAP.md
+│   └── POLICE_DEPARTMENT_SCHEMA_MAPPING.md
+├── frontend/
+│   ├── Dockerfile
+│   ├── .env.local
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── next.config.js
+│   ├── postcss.config.js
+│   ├── tailwind.config.ts
+│   ├── public/
+│   └── src/
+│       ├── app/
+│       ├── modules/
+│       └── shared/
+├── docker-compose.yml
+└── README.md
 ```
 
----
+## Technology Summary
 
-## 🔐 Security Features
+| Layer | Primary Technologies |
+|---|---|
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
+| Backend | Node.js 20, Fastify, TypeScript, Prisma |
+| AI/ML | Python 3.11, FastAPI, LangChain, FAISS |
+| Database | PostgreSQL, Redis |
+| Deployment | Docker, Docker Compose, Zoho Catalyst |
 
-- ✅ **JWT Authentication** with refresh tokens
-- ✅ **Password Hashing** (bcrypt)
-- ✅ **Role-Based Access Control** (RBAC)
-- ✅ **Audit Logging** (immutable records)
-- ✅ **Input Validation** (Zod schemas)
-- ✅ **SQL Injection Protection** (Parameterized queries)
-- ✅ **XSS Protection** (Content Security Policy)
-- ✅ **CSRF Protection** (SameSite cookies)
-- ✅ **Rate Limiting** (Fastify middleware)
-- ✅ **Data Encryption** (TLS/SSL)
-- ✅ **Secret Management** (Environment variables)
-- ✅ **Secure Headers** (Helmet middleware)
+## Development Notes
 
----
+- `.env` files and local secrets must remain excluded from source control.
+- `ai-services/` is designed to be a separate deployable service.
+- Backend and frontend modules can be developed independently and integrated through API contracts.
+- Use the `docs/` folder for architecture and deployment decisions.
 
-## 📊 Performance Targets
+## Testing and Quality
 
-| Metric | Target |
-|--------|--------|
-| API Response Time (p95) | <200ms |
-| Database Query Time (p95) | <100ms |
-| Frontend Load Time | <2 seconds |
-| Uptime | 99.99% |
-| Cache Hit Rate | >85% |
-| Concurrent Users | 100,000+ |
-| Requests Per Second | 10,000+ |
+Recommended practices:
+- Backend unit and integration tests for API routes and database logic
+- Frontend component and route tests for user flows
+- AI service tests for request validation and response structure
+- Static analysis with TypeScript and Python linters
+- Environment validation before deployment
 
----
+## Deployment
 
-## 🧪 Testing Strategy
+Production deployment should follow the Zoho Catalyst guidance in `docs/CATALYST_MANDATORY_DEPLOYMENT.md`.
 
-- **Unit Tests**: >70% coverage (Jest)
-- **Integration Tests**: API & database flows
-- **E2E Tests**: User workflows (Playwright)
-- **Security Tests**: SAST/DAST scanning
-- **Performance Tests**: Load testing with k6
-- **Accessibility Tests**: WCAG compliance
+For containerized local deployment use `docker compose up -d`.
 
----
+## Additional Resources
 
-## 🚀 Production Deployment
-
-### Kubernetes Deployment
-```bash
-# Deploy to Azure Kubernetes Service (AKS)
-kubectl apply -f kubernetes/namespaces.yaml
-kubectl apply -f kubernetes/postgres-statefulset.yaml
-kubectl apply -f kubernetes/redis-deployment.yaml
-kubectl apply -f kubernetes/backend-deployment.yaml
-kubectl apply -f kubernetes/frontend-deployment.yaml
-kubectl apply -f kubernetes/ingress.yaml
-```
-
-### Monitoring & Observability
-- **Prometheus**: Metrics collection
-- **Grafana**: Visualization & dashboards
-- **Loki**: Log aggregation
-- **Application Insights**: APM & tracing
-
----
-
-## 📞 Support & Documentation
-
-### Architecture Decisions
-See individual architecture documents:
-- **Frontend**: Component structure, state management, styling
-- **Backend**: API design, database schema, security
-- **AI/ML**: LLM integration, RAG pipeline, model serving
-- **Infrastructure**: Kubernetes, CI/CD, monitoring
-
-### Common Questions
-- See IMPLEMENTATION_ROADMAP.md for timeline & milestones
-- See DEPLOYMENT_INFRASTRUCTURE.md for production setup
-- See individual architecture docs for technology choices
+- `docs/IMPLEMENTATION_ROADMAP.md` for project milestones
+- `docs/FRONTEND_ARCHITECTURE.md` for UI design and conventions
+- `docs/BACKEND_ARCHITECTURE.md` for backend architecture and security
+- `docs/AI_ML_ARCHITECTURE.md` for AI/ML system design
+- `docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md` for Catalyst deployment details
 
 ### Team Contacts
 - Technical Architect: [Architecture documentation](FRONTEND_ARCHITECTURE.md)

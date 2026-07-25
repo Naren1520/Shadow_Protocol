@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3002),
+  PORT: z.coerce.number().default(3001),
   APP_NAME: z.string().default('ShadowProtocol'),
 
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL URL'),
@@ -17,6 +17,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  AI_SERVICE_URL: z.string().url('AI_SERVICE_URL must be a valid URL').default('http://localhost:3002'),
 
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW: z.string().default('15 minutes'),

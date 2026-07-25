@@ -148,7 +148,9 @@ cp .env.example .env
 uvicorn src.main:app --reload --host 0.0.0.0 --port 3002
 ```
 
-The AI service runs on `http://localhost:3002`.
+The AI service runs on `http://localhost:3002` and is exposed to the backend through the `AI_SERVICE_URL` setting.
+
+The backend proxies AI requests at `http://localhost:3001/api/v1/ai/*` to the standalone AI service.
 
 ### Docker Compose
 
@@ -156,7 +158,14 @@ The AI service runs on `http://localhost:3002`.
 docker compose up -d
 ```
 
-This command starts the local integration stack. Verify the service ports and container status after startup.
+This command starts the local integration stack with PostgreSQL, Redis, backend, frontend, and the AI service.
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:3001`
+- AI service (direct access): `http://localhost:3002`
+- Backend AI proxy: `http://localhost:3001/api/v1/ai/*`
+
+Verify the service ports and container status after startup.
 
 ## Folder Structure
 

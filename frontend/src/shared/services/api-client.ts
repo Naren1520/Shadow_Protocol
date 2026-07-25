@@ -8,8 +8,8 @@ import axios, {
 
 const API_BASE_URL =
   typeof window !== 'undefined'
-    ? process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002/api/v1'
-    : 'http://localhost:3002/api/v1';
+    ? process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1'
+    : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1';
 
 interface RequestConfig extends AxiosRequestConfig {
   requiresAuth?: boolean;

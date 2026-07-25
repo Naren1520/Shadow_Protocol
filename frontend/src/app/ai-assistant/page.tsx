@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AppShell } from '@/shared/components/layout/app-shell';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { apiClient } from '@/shared/services/api-client';
 import {
   Bot,
   Send,
@@ -47,25 +48,30 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-const mockResponses: Record<string, { content: string; evidence?: string[]; confidence: number }> = {
-  default: {
-    content:
-      'Based on my analysis of the Karnataka Police FIR database, I found relevant patterns. Robbery cases in Bengaluru Urban show a 12% increase in the Q1 2026 compared to Q1 2025, with MG Road and Cubbon Park areas being the primary hotspots. Peak occurrence is between 01:00–04:00 hrs. Recommend increased patrolling during these hours.',
-    evidence: ['FIR #10443000620260041', 'FIR #10443000620260038', 'Analytics: Bengaluru Urban Q1 2026'],
-    confidence: 0.87,
-  },
-};
-
 export default function AIAssistantPage() {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  const createConversation = async (): Promise<string> => {
+    if (conversationId) return conversationId;
+
+    try {
+      const response = await apiClient.post<{ conversation_id: string }>('/ai/conversations');
+      const newConversationId = response.data.conversation_id;
+      setConversationId(newConversationId);
+      return newConversationId;
+    } catch (error) {
+      throw new Error('Unable to create AI conversation.');
+    }
+  };
 
   const sendMessage = async (text?: string) => {
     const userText = (text ?? input).trim();
@@ -82,21 +88,45 @@ export default function AIAssistantPage() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response
-    await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
-    setIsTyping(false);
+    try {
+      const convoId = await createConversation();
+      const response = await apiClient.post('/ai/chat', {
+        query: userText,
+        conversation_id: convoId,
+        language: 'en',
+        include_evidence: true,
+      });
 
-    const response = mockResponses[userText.toLowerCase()] ?? mockResponses.default;
-    const assistantMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: response.content,
-      timestamp: new Date(),
-      evidence: response.evidence,
-      confidence: response.confidence,
-    };
+      const data = response.data as {
+        response: string;
+        confidence: number;
+        evidence?: string[];
+        followup_suggestions?: string[];
+      };
 
-    setMessages((prev) => [...prev, assistantMsg]);
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        evidence: data.evidence,
+        confidence: data.confidence,
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
+    } catch (error) {
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content:
+          'Unable to process your request. The AI service is currently unavailable. Please try again in a moment.',
+        timestamp: new Date(),
+        confidence: 0,
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

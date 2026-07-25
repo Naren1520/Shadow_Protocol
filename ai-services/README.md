@@ -28,4 +28,6 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 3002
 
 ## Notes
 
-This module is intentionally kept separate from the Node.js backend and can be integrated later via `AI_SERVICE_URL` or backend proxy configuration.
+This module is intentionally kept separate from the Node.js backend and can be integrated via `AI_SERVICE_URL` or backend proxy configuration.
+
+When running with Docker Compose, the root backend service forwards all `/api/v1/ai/*` requests to the AI service at `http://ai-services:3002` inside the compose network.

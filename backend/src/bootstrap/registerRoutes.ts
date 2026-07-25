@@ -5,6 +5,7 @@ import { caseRoutes } from '@/modules/cases/presentation/routes/caseRoutes';
 import { analyticsRoutes } from '@/modules/analytics/presentation/routes/analyticsRoutes';
 import { accusedRoutes } from '@/modules/accused/presentation/routes/accusedRoutes';
 import { auditRoutes } from '@/modules/audit/presentation/routes/auditRoutes';
+import { aiRoutes } from '@/modules/ai/presentation/routes/aiRoutes';
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   const API_PREFIX = '/api/v1';
@@ -15,6 +16,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(analyticsRoutes, { prefix: API_PREFIX });
   await app.register(accusedRoutes,   { prefix: API_PREFIX });
   await app.register(auditRoutes,     { prefix: API_PREFIX });
+  await app.register(aiRoutes,        { prefix: API_PREFIX });
 
   // Health check
   app.get('/health', async () => ({

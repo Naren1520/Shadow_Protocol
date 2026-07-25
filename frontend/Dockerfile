@@ -13,6 +13,8 @@ RUN \
 
 # ---- Build ----
 FROM base AS builder
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3001/api/v1}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

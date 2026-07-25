@@ -82,6 +82,25 @@ async function main() {
     },
   });
 
+  // Seed a second officer for the seeded officer user
+  await prisma.policeOfficer.upsert({
+    where: { employeeId: 1002 },
+    update: {},
+    create: {
+      employeeId: 1002,
+      districtId: 441,
+      unitId: 6,
+      rankId: 5,
+      designationId: 10,
+      kgId: 'KG-2021-04522',
+      firstName: 'Priya Sharma',
+      employeeDob: new Date('1993-08-22'),
+      genderId: 2,
+      bloodGroupId: 1,
+      appointmentDate: new Date('2022-01-10'),
+    },
+  });
+
   // Seed Case Categories
   const categories = [
     { caseCategoryId: 1, lookupValue: 'FIR' },
@@ -284,7 +303,7 @@ async function main() {
       passwordHash: officerHash,
       role: 'SUB_INSPECTOR',
       isActive: true,
-      employeeId: 1001,
+      employeeId: 1002,
     },
   });
 

@@ -167,6 +167,170 @@ This command starts the local integration stack with PostgreSQL, Redis, backend,
 
 Verify the service ports and container status after startup.
 
+### Zoho Catalyst Deployment
+
+This repository includes a single root Catalyst deployment manifest in `catalyst.yml`.
+The full Catalyst service mapping is also embedded here for easy reference.
+
+```bash
+npm install -g catalyst-cli
+catalyst-cli login
+catalyst-cli deploy
+```
+
+The manifest maps these modules to Catalyst services:
+- `frontend/` → `catalyst-slate`
+- `backend/` → `catalyst-appsail`
+- `ai-services/` → `catalyst-appsail`
+- `quickml` → `catalyst-quickml`
+- `database` → `catalyst-datastore`
+- `cache` → `catalyst-cache`
+- `storage` → `catalyst-stratus`
+- `auth` → `catalyst-authentication`
+- `gateway` → `catalyst-api-gateway`
+- `events` → `catalyst-signals`
+- `workflows` → `catalyst-circuits`
+- `cron` → `catalyst-cron`
+- `mail` → `catalyst-mail`
+- `pipeline` → `catalyst-pipelines`
+
+#### Embedded Catalyst manifest
+
+```yaml
+project: shadowprotocol
+version: 1.0.0
+
+services:
+  frontend:
+    type: catalyst-slate
+    source: ./frontend
+    buildCommand: "npm install && npm run build"
+    runtime: node:20
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: https://api.shadowprotocol.police.gov.in/api/v1
+      NEXT_PUBLIC_AI_BASE_URL: https://ai.shadowprotocol.police.gov.in/api/v1
+    domains:
+      - name: shadowprotocol.police.gov.in
+        ssl: true
+        cdn: true
+    healthCheck:
+      path: /health
+      interval: 30s
+    autoscaling:
+      minInstances: 2
+      maxInstances: 8
+      targetCPU: 70
+
+  backend:
+    type: catalyst-appsail
+    source: ./backend
+    runtime: node:20
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start"
+    port: 3001
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: catalyst-datastore://default
+      REDIS_URL: catalyst-cache://default
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ALLOWED_ORIGINS: https://shadowprotocol.police.gov.in
+      AI_SERVICE_URL: https://ai.shadowprotocol.police.gov.in
+      LOG_LEVEL: info
+      STRATUS_BUCKET: evidence-bucket
+    scale:
+      minInstances: 2
+      maxInstances: 10
+      targetCPU: 70
+
+  ai-services:
+    type: catalyst-appsail
+    source: ./ai-services
+    runtime: python:3.11
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn src.main:app --host 0.0.0.0 --port 3002 --workers 4"
+    port: 3002
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: catalyst-datastore://default
+      CACHE_URL: catalyst-cache://default
+      STRATUS_BUCKET: evidence-bucket
+    scale:
+      minInstances: 1
+      maxInstances: 4
+      targetCPU: 70
+
+  quickml:
+    type: catalyst-quickml
+    models:
+      - name: crime-llm
+        type: llm
+        modelName: gpt-4
+        config:
+          temperature: 0.7
+          maxTokens: 500
+
+      - name: crime-rag
+        type: rag
+        embeddingModel: text-embedding-3-small
+        vectorStore: catalyst-datastore
+        documents: crime_data
+
+  database:
+    type: catalyst-datastore
+    tables:
+      - users
+      - crimes
+      - cases
+      - accusations
+      - evidence
+      - analytics
+
+  cache:
+    type: catalyst-cache
+    memory: 1024MB
+
+  storage:
+    type: catalyst-stratus
+    buckets:
+      - name: evidence-bucket
+        public: false
+
+  auth:
+    type: catalyst-authentication
+    providers:
+      - type: email
+
+  gateway:
+    type: catalyst-api-gateway
+    routes:
+      - path: /api/v1/*
+        service: backend
+      - path: /api/v1/ai/*
+        service: backend
+      - path: /ai/*
+        service: ai-services
+
+  events:
+    type: catalyst-signals
+
+  workflows:
+    type: catalyst-circuits
+
+  cron:
+    type: catalyst-cron
+
+  mail:
+    type: catalyst-mail
+
+  pipeline:
+    type: catalyst-pipelines
+    trigger:
+      onPush: true
+```
+
+For deployment details, see `docs/DEPLOYMENT_INFRASTRUCTURE_CATALYST.md`.
+
 ## Folder Structure
 
 ```

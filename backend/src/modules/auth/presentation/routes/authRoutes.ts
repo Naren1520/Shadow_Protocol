@@ -67,7 +67,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
       return reply.status(200).send({
         success: true,
-        data: { accessToken: newAccessToken },
+        data: { accessToken: newAccessToken, refreshToken },
       });
     }
   );

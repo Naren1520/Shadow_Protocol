@@ -32,7 +32,8 @@ export default function LoginPage() {
     setLoginError('');
     try {
       const response = await apiClient.post('/auth/login', values);
-      apiClient.setTokens(response.data.accessToken, response.data.refreshToken);
+      const { accessToken, refreshToken } = response.data.data ?? {};
+      apiClient.setTokens(accessToken, refreshToken);
       window.location.href = '/dashboard';
     } catch {
       setLoginError('Invalid credentials. Please try again.');

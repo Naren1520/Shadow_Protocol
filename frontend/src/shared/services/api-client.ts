@@ -63,8 +63,8 @@ class APIClient {
               refreshToken,
             });
 
-            const { accessToken, refreshToken: newRefreshToken } = response.data;
-            this.setTokens(accessToken, newRefreshToken);
+            const { accessToken, refreshToken: newRefreshToken } = response.data.data ?? {};
+            this.setTokens(accessToken, newRefreshToken ?? refreshToken);
 
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${accessToken}`;

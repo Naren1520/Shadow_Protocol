@@ -18,8 +18,9 @@ async function main() {
 
   try {
     await connectDatabase();
-    await app.listen({ port: config.PORT, host: '0.0.0.0' });
-    app.log.info(`🚀 ShadowProtocol API running on http://0.0.0.0:${config.PORT}`);
+    const host = config.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+    await app.listen({ port: config.PORT, host });
+    app.log.info(`🚀 ShadowProtocol API running on http://${host}:${config.PORT}`);
     app.log.info(`📚 API Docs: http://localhost:${config.PORT}/docs`);
   } catch (err) {
     app.log.error(err);

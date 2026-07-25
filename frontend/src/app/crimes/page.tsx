@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppShell } from '@/shared/components/layout/app-shell';
 import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
@@ -20,87 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
-
-const MOCK_CRIMES = [
-  {
-    caseMasterId: 1,
-    crimeNo: '10443000620260041',
-    caseNo: '440000620260041',
-    crimeRegisteredDate: '2026-07-24',
-    policeStationId: 6,
-    stationName: 'Cubbon Park PS',
-    caseStatusId: 1,
-    statusName: 'Open',
-    crimeType: 'Robbery',
-    gravity: 'Heinous',
-    district: 'Bengaluru Urban',
-  },
-  {
-    caseMasterId: 2,
-    crimeNo: '10443000620260040',
-    caseNo: '440000620260040',
-    crimeRegisteredDate: '2026-07-23',
-    policeStationId: 7,
-    stationName: 'Shivajinagar PS',
-    caseStatusId: 2,
-    statusName: 'Under Investigation',
-    crimeType: 'Assault',
-    gravity: 'Non-Heinous',
-    district: 'Bengaluru Urban',
-  },
-  {
-    caseMasterId: 3,
-    crimeNo: '10443000620260039',
-    caseNo: '440000620260039',
-    crimeRegisteredDate: '2026-07-23',
-    policeStationId: 8,
-    stationName: 'Indiranagar PS',
-    caseStatusId: 3,
-    statusName: 'Charged',
-    crimeType: 'Theft',
-    gravity: 'Non-Heinous',
-    district: 'Bengaluru Urban',
-  },
-  {
-    caseMasterId: 4,
-    crimeNo: '10443000620260038',
-    caseNo: '440000620260038',
-    crimeRegisteredDate: '2026-07-22',
-    policeStationId: 9,
-    stationName: 'Banashankari PS',
-    caseStatusId: 4,
-    statusName: 'Arrested',
-    crimeType: 'NDPS Act',
-    gravity: 'Heinous',
-    district: 'Bengaluru Urban',
-  },
-  {
-    caseMasterId: 5,
-    crimeNo: '10443000620260037',
-    caseNo: '440000620260037',
-    crimeRegisteredDate: '2026-07-22',
-    policeStationId: 10,
-    stationName: 'Malleswaram PS',
-    caseStatusId: 1,
-    statusName: 'Open',
-    crimeType: 'Dacoity',
-    gravity: 'Heinous',
-    district: 'Bengaluru Urban',
-  },
-  {
-    caseMasterId: 6,
-    crimeNo: '20329000120260020',
-    caseNo: '329000120260020',
-    crimeRegisteredDate: '2026-07-21',
-    policeStationId: 12,
-    stationName: 'Mysuru North PS',
-    caseStatusId: 2,
-    statusName: 'Under Investigation',
-    crimeType: 'Murder',
-    gravity: 'Heinous',
-    district: 'Mysuru',
-  },
-];
+import { crimeService } from '@/modules/crimes/services/crime-service';
 
 const statusBadgeMap: Record<string, React.ReactNode> = {
   Open: <Badge variant="danger" dot>Open</Badge>,
@@ -119,30 +39,58 @@ export default function CrimeListPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [appliedCrimeNo, setAppliedCrimeNo] = useState('');
+  const [crimes, setCrimes] = useState<any[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const PER_PAGE = 10;
 
-  const handleSearch = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 600);
-  };
+  useEffect(() => {
+    const loadCrimes = async () => {
+      setLoading(true);
+      setError(null);
 
-  const crimes = MOCK_CRIMES;
-  const filtered = statusFilter
-    ? crimes.filter((c) => c.statusName === statusFilter)
-    : crimes;
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+      try {
+        const statusId = statusFilter ? Number(statusFilter) : undefined;
+        const response = await crimeService.searchCrimes({
+          page,
+          limit: PER_PAGE,
+          ...(appliedCrimeNo ? { crimeNo: appliedCrimeNo } : {}),
+          ...(statusId ? { caseStatusId: statusId } : {}),
+        });
+
+        const payload = response.data;
+        setCrimes(payload?.data || []);
+        setTotalRecords(payload?.pagination?.total || 0);
+        setTotalPages(payload?.pagination?.totalPages || 1);
+      } catch (err) {
+        setError('Unable to load FIR records from the backend.');
+        setCrimes([]);
+        setTotalRecords(0);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadCrimes();
+  }, [appliedCrimeNo, page, statusFilter]);
+
+  const handleSearch = () => {
+    setPage(1);
+    setAppliedCrimeNo(crimeNo.trim());
+  };
 
   return (
     <AppShell>
       <div className="space-y-5">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">FIR Records</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {filtered.length.toLocaleString()} records · Karnataka Police FIR System
+              {totalRecords.toLocaleString()} records · Karnataka Police FIR System
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -155,7 +103,6 @@ export default function CrimeListPage() {
           </div>
         </div>
 
-        {/* Search & Filter bar */}
         <Card className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
@@ -194,10 +141,10 @@ export default function CrimeListPage() {
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                 options={[
                   { value: '', label: 'All Statuses' },
-                  { value: 'Open', label: 'Open' },
-                  { value: 'Under Investigation', label: 'Under Investigation' },
-                  { value: 'Charged', label: 'Charged' },
-                  { value: 'Arrested', label: 'Arrested' },
+                  { value: '1', label: 'Open' },
+                  { value: '2', label: 'Under Investigation' },
+                  { value: '3', label: 'Charged' },
+                  { value: '4', label: 'Arrested' },
                 ]}
               />
               <Input label="From Date" type="date" />
@@ -206,13 +153,12 @@ export default function CrimeListPage() {
           )}
         </Card>
 
-        {/* Table */}
         <Card noPadding className="overflow-hidden">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">
               Results{' '}
               <span className="text-muted-foreground font-normal">
-                ({filtered.length} records)
+                ({totalRecords} records)
               </span>
             </h3>
             <button
@@ -224,7 +170,9 @@ export default function CrimeListPage() {
             </button>
           </div>
 
-          {loading ? (
+          {error ? (
+            <div className="px-6 py-10 text-sm text-muted-foreground">{error}</div>
+          ) : loading ? (
             <div className="flex items-center justify-center py-16">
               <RefreshCw className="h-6 w-6 animate-spin text-primary-500" />
             </div>
@@ -233,20 +181,15 @@ export default function CrimeListPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/60">
-                    {['Crime No.', 'Type', 'Gravity', 'Station', 'District', 'Date', 'Status', ''].map(
-                      (h) => (
-                        <th
-                          key={h}
-                          className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                        >
-                          {h}
-                        </th>
-                      )
-                    )}
+                    {['Crime No.', 'Type', 'Gravity', 'Station', 'District', 'Date', 'Status', ''].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {paginated.length === 0 ? (
+                  {crimes.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">
                         <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -254,35 +197,30 @@ export default function CrimeListPage() {
                       </td>
                     </tr>
                   ) : (
-                    paginated.map((crime) => (
+                    crimes.map((crime) => (
                       <tr key={crime.caseMasterId} className="hover:bg-muted/40 transition-colors">
                         <td className="px-4 py-3.5">
-                          <Link
-                            href={`/crimes/${crime.caseMasterId}`}
-                            className="font-mono text-xs text-primary-600 hover:text-primary-700 hover:underline"
-                          >
+                          <Link href={`/crimes/${crime.caseMasterId}`} className="font-mono text-xs text-primary-600 hover:text-primary-700 hover:underline">
                             {crime.crimeNo}
                           </Link>
                         </td>
-                        <td className="px-4 py-3.5 font-medium text-foreground">{crime.crimeType}</td>
-                        <td className="px-4 py-3.5">{gravityBadgeMap[crime.gravity] ?? <Badge variant="neutral">{crime.gravity}</Badge>}</td>
+                        <td className="px-4 py-3.5 font-medium text-foreground">{crime.majorHead?.crimeGroupName || crime.caseCategory?.lookupValue || 'N/A'}</td>
+                        <td className="px-4 py-3.5">{gravityBadgeMap[crime.gravityOffence?.lookupValue] ?? <Badge variant="neutral">{crime.gravityOffence?.lookupValue || 'N/A'}</Badge>}</td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-1.5 text-secondary">
                             <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                            <span className="text-sm">{crime.stationName}</span>
+                            <span className="text-sm">{crime.policeStation?.unitName || 'N/A'}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-secondary">{crime.district}</td>
+                        <td className="px-4 py-3.5 text-sm text-secondary">{crime.policeStation?.districtName || 'N/A'}</td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-1.5 text-secondary">
                             <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-                            <span className="text-sm">{new Date(crime.crimeRegisteredDate).toLocaleDateString('en-IN')}</span>
+                            <span className="text-sm">{crime.crimeRegisteredDate ? new Date(crime.crimeRegisteredDate).toLocaleDateString('en-IN') : 'N/A'}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
-                          {statusBadgeMap[crime.statusName] ?? (
-                            <Badge variant="neutral">{crime.statusName}</Badge>
-                          )}
+                          {statusBadgeMap[crime.caseStatus?.caseStatusName] ?? <Badge variant="neutral">{crime.caseStatus?.caseStatusName || 'N/A'}</Badge>}
                         </td>
                         <td className="px-4 py-3.5">
                           <Link href={`/crimes/${crime.caseMasterId}`}>
@@ -299,12 +237,9 @@ export default function CrimeListPage() {
             </div>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-3.5 border-t border-border flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Page {page} of {totalPages}
-              </p>
+              <p className="text-xs text-muted-foreground">Page {page} of {totalPages}</p>
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"

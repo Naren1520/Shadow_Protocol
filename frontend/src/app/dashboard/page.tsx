@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { AppShell } from '@/shared/components/layout/app-shell';
 import { StatCard } from '@/shared/components/ui/stat-card';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
@@ -16,92 +18,7 @@ import {
   Building2,
 } from 'lucide-react';
 import Link from 'next/link';
-
-const stats = [
-  {
-    title: 'Total FIRs',
-    value: '28,176',
-    subtitle: 'This financial year',
-    icon: <FileText className="h-5 w-5 text-blue-600" />,
-    iconBg: 'bg-blue-50',
-    trend: { value: 4.2, label: 'vs last year' },
-  },
-  {
-    title: 'Open Investigations',
-    value: '6,214',
-    subtitle: 'Active cases',
-    icon: <Search className="h-5 w-5 text-amber-600" />,
-    iconBg: 'bg-amber-50',
-    trend: { value: -2.8, label: 'vs last month' },
-  },
-  {
-    title: 'Cases Charged',
-    value: '9,978',
-    subtitle: 'Chargesheets filed',
-    icon: <CheckCircle className="h-5 w-5 text-emerald-600" />,
-    iconBg: 'bg-emerald-50',
-    trend: { value: 8.1, label: 'vs last year' },
-  },
-  {
-    title: 'High Priority',
-    value: '1,024',
-    subtitle: 'Heinous offences',
-    icon: <AlertTriangle className="h-5 w-5 text-red-600" />,
-    iconBg: 'bg-red-50',
-    trend: { value: 1.3, label: 'vs last month' },
-  },
-];
-
-const recentFIRs = [
-  {
-    crimeNo: '10443000620260041',
-    crimeType: 'Robbery',
-    station: 'Cubbon Park PS',
-    date: '24 Jul 2026',
-    status: 'Open',
-    gravity: 'Heinous',
-  },
-  {
-    crimeNo: '10443000620260040',
-    crimeType: 'Assault',
-    station: 'Shivajinagar PS',
-    date: '23 Jul 2026',
-    status: 'Under Investigation',
-    gravity: 'Non-Heinous',
-  },
-  {
-    crimeNo: '10443000620260039',
-    crimeType: 'Theft',
-    station: 'Indiranagar PS',
-    date: '23 Jul 2026',
-    status: 'Charged',
-    gravity: 'Non-Heinous',
-  },
-  {
-    crimeNo: '10443000620260038',
-    crimeType: 'NDPS Act',
-    station: 'Banashankari PS',
-    date: '22 Jul 2026',
-    status: 'Arrested',
-    gravity: 'Heinous',
-  },
-  {
-    crimeNo: '10443000620260037',
-    crimeType: 'Dacoity',
-    station: 'Malleswaram PS',
-    date: '22 Jul 2026',
-    status: 'Open',
-    gravity: 'Heinous',
-  },
-];
-
-const districtStats = [
-  { name: 'Bengaluru Urban', firs: 8412, pct: 90 },
-  { name: 'Mysuru', firs: 3214, pct: 65 },
-  { name: 'Dharwad', firs: 2891, pct: 58 },
-  { name: 'Belagavi', firs: 2654, pct: 52 },
-  { name: 'Hubballi', firs: 1988, pct: 40 },
-];
+import { crimeService } from '@/modules/crimes/services/crime-service';
 
 const statusBadge = (status: string) => {
   if (status === 'Open') return <Badge variant="danger" dot>{status}</Badge>;
@@ -112,6 +29,70 @@ const statusBadge = (status: string) => {
 };
 
 export default function DashboardPage() {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [recentFIRs, setRecentFIRs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [dashboardRes, crimesRes] = await Promise.all([
+          crimeService.getCrimeDashboardMetrics(),
+          crimeService.searchCrimes({ limit: 5 }),
+        ]);
+
+        setMetrics(dashboardRes.data?.data || null);
+        setRecentFIRs(crimesRes.data?.data || []);
+      } catch (err) {
+        setError('Unable to load dashboard data from the backend.');
+        setMetrics(null);
+        setRecentFIRs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadDashboard();
+  }, []);
+
+  const stats = [
+    {
+      title: 'Total FIRs',
+      value: (metrics?.totalFIRs ?? 0).toLocaleString(),
+      subtitle: 'Live backend count',
+      icon: <FileText className="h-5 w-5 text-blue-600" />,
+      iconBg: 'bg-blue-50',
+      trend: { value: 0, label: 'from backend' },
+    },
+    {
+      title: 'Open Investigations',
+      value: (metrics?.openCases ?? 0).toLocaleString(),
+      subtitle: 'Active cases',
+      icon: <Search className="h-5 w-5 text-amber-600" />,
+      iconBg: 'bg-amber-50',
+      trend: { value: 0, label: 'from backend' },
+    },
+    {
+      title: 'Cases Charged',
+      value: (metrics?.chargedCases ?? 0).toLocaleString(),
+      subtitle: 'Chargesheets filed',
+      icon: <CheckCircle className="h-5 w-5 text-emerald-600" />,
+      iconBg: 'bg-emerald-50',
+      trend: { value: 0, label: 'from backend' },
+    },
+    {
+      title: 'High Priority',
+      value: (metrics?.heinousOffences ?? 0).toLocaleString(),
+      subtitle: 'Heinous offences',
+      icon: <AlertTriangle className="h-5 w-5 text-red-600" />,
+      iconBg: 'bg-red-50',
+      trend: { value: 0, label: 'from backend' },
+    },
+  ];
   return (
     <AppShell>
       <div className="space-y-6">
@@ -159,87 +140,80 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/60">
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Crime No.
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                      Station
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {recentFIRs.map((fir) => (
-                    <tr key={fir.crimeNo} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <Link
-                          href={`/crimes/${fir.crimeNo}`}
-                          className="font-mono text-xs text-primary-600 hover:text-primary-700 hover:underline"
-                        >
-                          {fir.crimeNo}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">{fir.crimeType}</span>
-                          {fir.gravity === 'Heinous' && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 hidden md:table-cell">
-                        <div className="flex items-center gap-1.5 text-sm text-secondary">
-                          <Building2 className="h-3 w-3 flex-shrink-0" />
-                          {fir.station}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 hidden lg:table-cell">
-                        <div className="flex items-center gap-1.5 text-sm text-secondary">
-                          <Clock className="h-3 w-3 flex-shrink-0" />
-                          {fir.date}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5">{statusBadge(fir.status)}</td>
+              {error ? (
+                <div className="px-6 py-8 text-sm text-muted-foreground">{error}</div>
+              ) : loading ? (
+                <div className="px-6 py-8 text-sm text-muted-foreground">Loading live FIR data…</div>
+              ) : recentFIRs.length === 0 ? (
+                <div className="px-6 py-8 text-sm text-muted-foreground">No FIR records were returned by the backend.</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/60">
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Crime No.</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Station</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {recentFIRs.map((fir) => (
+                      <tr key={fir.caseMasterId} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-6 py-3.5">
+                          <Link href={`/crimes/${fir.caseMasterId}`} className="font-mono text-xs text-primary-600 hover:text-primary-700 hover:underline">
+                            {fir.crimeNo}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">{fir.majorHead?.crimeGroupName || fir.caseCategory?.lookupValue || 'N/A'}</span>
+                            {fir.gravityOffence?.lookupValue === 'Heinous' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 hidden md:table-cell">
+                          <div className="flex items-center gap-1.5 text-sm text-secondary">
+                            <Building2 className="h-3 w-3 flex-shrink-0" />
+                            {fir.policeStation?.unitName || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 hidden lg:table-cell">
+                          <div className="flex items-center gap-1.5 text-sm text-secondary">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            {fir.crimeRegisteredDate ? new Date(fir.crimeRegisteredDate).toLocaleDateString('en-IN') : 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">{statusBadge(fir.caseStatus?.caseStatusName || 'N/A')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </Card>
 
-          {/* District breakdown */}
           <Card>
             <CardHeader>
               <div>
-                <CardTitle>District Breakdown</CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">FIRs by district this year</p>
+                <CardTitle>Backend Snapshot</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Live counts from the Crime API</p>
               </div>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
-                {districtStats.map((d) => (
-                  <li key={d.name}>
+                {[
+                  { name: 'Open Investigations', value: metrics?.openCases ?? 0, pct: 60 },
+                  { name: 'Charged Cases', value: metrics?.chargedCases ?? 0, pct: 45 },
+                  { name: 'Heinous Offences', value: metrics?.heinousOffences ?? 0, pct: 35 },
+                ].map((item) => (
+                  <li key={item.name}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-foreground">{d.name}</span>
-                      <span className="text-sm text-secondary tabular-nums">{d.firs.toLocaleString()}</span>
+                      <span className="text-sm font-medium text-foreground">{item.name}</span>
+                      <span className="text-sm text-secondary tabular-nums">{item.value.toLocaleString()}</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary-600 rounded-full transition-all duration-700"
-                        style={{ width: `${d.pct}%` }}
-                      />
+                      <div className="h-full bg-primary-600 rounded-full transition-all duration-700" style={{ width: `${item.pct}%` }} />
                     </div>
                   </li>
                 ))}

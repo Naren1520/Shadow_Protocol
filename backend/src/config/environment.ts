@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3001),
+  PORT: z.coerce.number().default(3002),
   APP_NAME: z.string().default('ShadowProtocol'),
 
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL URL'),

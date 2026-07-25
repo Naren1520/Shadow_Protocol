@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppShell } from '@/shared/components/layout/app-shell';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
@@ -20,44 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
-
-// Mock data — replace with API call
-const FIR_DETAIL = {
-  caseMasterId: 1,
-  crimeNo: '10443000620260041',
-  caseNo: '440000620260041',
-  crimeRegisteredDate: '2026-07-24T09:32:00',
-  station: 'Cubbon Park Police Station',
-  district: 'Bengaluru Urban',
-  officer: 'Sub-Inspector K. Ramesh',
-  category: 'FIR',
-  gravity: 'Heinous',
-  majorHead: 'Crimes Against Property',
-  minorHead: 'Robbery',
-  status: 'Open',
-  court: 'Additional Chief Metropolitan Magistrate Court',
-  incidentFrom: '2026-07-24T02:15:00',
-  incidentTo: '2026-07-24T02:45:00',
-  latitude: 12.9716,
-  longitude: 77.5946,
-  briefFacts:
-    'The complainant reported that on 24-07-2026 at approximately 02:15 hrs, two unidentified persons on a motorcycle approached him near Cubbon Park main gate and snatched his mobile phone and wallet containing cash Rs.4500/- and identity documents. The accused fled on the motorcycle towards MG Road direction.',
-  acts: [
-    { actCode: 'IPC', sectionCode: '392', description: 'Robbery' },
-    { actCode: 'IPC', sectionCode: '397', description: 'Robbery with attempt to cause death or grievous hurt' },
-  ],
-  complainants: [
-    { name: 'Aravind Sharma', age: 34, gender: 'Male', occupation: 'Software Engineer' },
-  ],
-  victims: [
-    { name: 'Aravind Sharma', age: 34, gender: 'Male' },
-  ],
-  accused: [
-    { personId: 'A1', name: 'Unknown', age: null, gender: 'Male', status: 'Absconding' },
-    { personId: 'A2', name: 'Unknown', age: null, gender: 'Male', status: 'Absconding' },
-  ],
-  arrests: [],
-};
+import { crimeService } from '@/modules/crimes/services/crime-service';
 
 interface Props {
   params: Promise<{ caseMasterId: string }>;
@@ -65,18 +28,49 @@ interface Props {
 
 export default function CrimeDetailPage({ params }: Props) {
   const { caseMasterId } = React.use(params);
-  void caseMasterId; // TODO: use to fetch from API — for now using mock data
-  const fir = FIR_DETAIL;
+  const [fir, setFir] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCrime = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await crimeService.getCrimeDetails(Number(caseMasterId));
+        setFir(response.data?.data || null);
+      } catch (err) {
+        setError('Unable to load FIR details from the backend.');
+        setFir(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (caseMasterId) {
+      void loadCrime();
+    }
+  }, [caseMasterId]);
+
+  const stationName = fir?.policeStation?.unitName || 'N/A';
+  const districtName = fir?.policeStation?.districtName || fir?.district || 'N/A';
+  const officerName = fir?.registeredBy ? `${fir.registeredBy.rank?.rankName || ''} ${fir.registeredBy.firstName || ''}`.trim() : 'N/A';
+  const gravity = fir?.gravityOffence?.lookupValue || 'N/A';
+  const status = fir?.caseStatus?.caseStatusName || 'N/A';
+  const category = fir?.caseCategory?.lookupValue || 'N/A';
+  const majorHead = fir?.majorHead?.crimeGroupName || 'N/A';
+  const minorHead = fir?.minorHead?.crimeHeadName || 'N/A';
+  const courtName = fir?.court?.courtName || 'N/A';
+  const acts = fir?.actSections || [];
+  const complainants = fir?.complainants || [];
+  const accused = fir?.accused || [];
 
   return (
     <AppShell>
       <div className="space-y-5 max-w-5xl">
-        {/* Back + actions */}
         <div className="flex items-center justify-between">
-          <Link
-            href="/crimes"
-            className="flex items-center gap-2 text-sm text-secondary hover:text-foreground transition-colors"
-          >
+          <Link href="/crimes" className="flex items-center gap-2 text-sm text-secondary hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Back to FIR Records
           </Link>
@@ -90,190 +84,195 @@ export default function CrimeDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* FIR Header Card */}
-        <Card>
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="text-xl font-bold text-foreground font-mono">{fir.crimeNo}</h1>
-                <Badge variant={fir.gravity === 'Heinous' ? 'danger' : 'neutral'} dot>
-                  {fir.gravity}
-                </Badge>
-                <Badge variant="danger" dot>{fir.status}</Badge>
-                <Badge variant="info">{fir.category}</Badge>
-              </div>
-              <p className="text-sm text-secondary">
-                Case No: <span className="font-medium font-mono">{fir.caseNo}</span>
-              </p>
-              <div className="flex flex-wrap gap-4 mt-3">
-                {[
-                  { icon: <Building2 className="h-3.5 w-3.5" />, label: fir.station },
-                  { icon: <MapPin className="h-3.5 w-3.5" />, label: fir.district },
-                  { icon: <Calendar className="h-3.5 w-3.5" />, label: new Date(fir.crimeRegisteredDate).toLocaleString('en-IN') },
-                  { icon: <User className="h-3.5 w-3.5" />, label: fir.officer },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-1.5 text-xs text-secondary">
-                    {item.icon}
-                    {item.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Left column */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Brief Facts */}
+        {error ? (
+          <Card className="p-6 text-sm text-muted-foreground">{error}</Card>
+        ) : loading ? (
+          <Card className="p-6 text-sm text-muted-foreground">Loading FIR details from the backend…</Card>
+        ) : !fir ? (
+          <Card className="p-6 text-sm text-muted-foreground">No FIR details were returned by the backend.</Card>
+        ) : (
+          <>
             <Card>
-              <CardHeader>
-                <CardTitle>Brief Facts</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{fir.briefFacts}</p>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Incident From</p>
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                      <Clock className="h-3.5 w-3.5 text-secondary" />
-                      {new Date(fir.incidentFrom).toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Incident To</p>
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                      <Clock className="h-3.5 w-3.5 text-secondary" />
-                      {new Date(fir.incidentTo).toLocaleString('en-IN')}
-                    </div>
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-6 w-6 text-blue-600" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Acts & Sections */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Acts & Sections</CardTitle>
-                <Scale className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {fir.acts.map((act, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                      <div className="w-8 h-8 rounded-md bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="h-4 w-4 text-blue-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {act.actCode} § {act.sectionCode}
-                        </p>
-                        <p className="text-xs text-secondary mt-0.5">{act.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Accused */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Accused ({fir.accused.length})</CardTitle>
-                <Badge variant="neutral">{fir.accused.length} persons</Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {fir.accused.map((acc) => (
-                    <div key={acc.personId} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                      <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-red-600">{acc.personId}</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {acc.name}
-                          {acc.age ? `, ${acc.age}` : ''}
-                        </p>
-                        <p className="text-xs text-secondary">{acc.gender}</p>
-                      </div>
-                      <Badge variant="warning">{acc.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-4">
-            {/* Case Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Case Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="space-y-3">
-                  {[
-                    { label: 'Major Head', value: fir.majorHead },
-                    { label: 'Minor Head', value: fir.minorHead },
-                    { label: 'Category', value: fir.category },
-                    { label: 'Court', value: fir.court },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                      <dd className="text-sm font-medium text-foreground mt-0.5">{item.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </CardContent>
-            </Card>
-
-            {/* Complainants */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Complainants</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {fir.complainants.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2.5 bg-muted rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{c.name}, {c.age}</p>
-                      <p className="text-xs text-secondary">{c.occupation} · {c.gender}</p>
-                    </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h1 className="text-xl font-bold text-foreground font-mono">{fir.crimeNo}</h1>
+                    <Badge variant={gravity === 'Heinous' ? 'danger' : 'neutral'} dot>
+                      {gravity}
+                    </Badge>
+                    <Badge variant="danger" dot>{status}</Badge>
+                    <Badge variant="info">{category}</Badge>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Location */}
-            {fir.latitude && fir.longitude && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Location</CardTitle>
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground">Coordinates</p>
-                    <p className="text-sm font-mono font-medium text-foreground mt-0.5">
-                      {fir.latitude}°N, {fir.longitude}°E
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    Map view — integrate React Leaflet here
+                  <p className="text-sm text-secondary">
+                    Case No: <span className="font-medium font-mono">{fir.caseNo}</span>
                   </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+                  <div className="flex flex-wrap gap-4 mt-3">
+                    {[
+                      { icon: <Building2 className="h-3.5 w-3.5" />, label: stationName },
+                      { icon: <MapPin className="h-3.5 w-3.5" />, label: districtName },
+                      { icon: <Calendar className="h-3.5 w-3.5" />, label: fir.crimeRegisteredDate ? new Date(fir.crimeRegisteredDate).toLocaleString('en-IN') : 'N/A' },
+                      { icon: <User className="h-3.5 w-3.5" />, label: officerName },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-xs text-secondary">
+                        {item.icon}
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="lg:col-span-2 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Brief Facts</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-foreground leading-relaxed">{fir.briefFacts || 'No brief facts were returned by the backend.'}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="bg-muted rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Incident From</p>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                          <Clock className="h-3.5 w-3.5 text-secondary" />
+                          {fir.incidentFromDate ? new Date(fir.incidentFromDate).toLocaleString('en-IN') : 'N/A'}
+                        </div>
+                      </div>
+                      <div className="bg-muted rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Incident To</p>
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                          <Clock className="h-3.5 w-3.5 text-secondary" />
+                          {fir.incidentToDate ? new Date(fir.incidentToDate).toLocaleString('en-IN') : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Acts & Sections</CardTitle>
+                    <Scale className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {acts.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No act/section data returned by the backend.</p>
+                      ) : acts.map((act: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                          <div className="w-8 h-8 rounded-md bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <BookOpen className="h-4 w-4 text-blue-700" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {act.act?.actCode || 'N/A'} § {act.section?.sectionCode || 'N/A'}
+                            </p>
+                            <p className="text-xs text-secondary mt-0.5">{act.act?.actDescription || act.section?.sectionDescription || 'N/A'}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Accused ({accused.length})</CardTitle>
+                    <Badge variant="neutral">{accused.length} persons</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {accused.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No accused persons were returned.</p>
+                      ) : accused.map((acc: any) => (
+                        <div key={acc.accusedMasterId} className="flex items-center gap-3 p-3 border border-border rounded-lg">
+                          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-red-600">{acc.personId || acc.accusedMasterId}</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              {acc.accusedName || 'Unknown'}
+                              {acc.ageYear ? `, ${acc.ageYear}` : ''}
+                            </p>
+                            <p className="text-xs text-secondary">{acc.genderId ? `Gender ID ${acc.genderId}` : 'Gender not available'}</p>
+                          </div>
+                          <Badge variant="warning">{acc.status || 'N/A'}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Case Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="space-y-3">
+                      {[
+                        { label: 'Major Head', value: majorHead },
+                        { label: 'Minor Head', value: minorHead },
+                        { label: 'Category', value: category },
+                        { label: 'Court', value: courtName },
+                      ].map((item) => (
+                        <div key={item.label}>
+                          <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                          <dd className="text-sm font-medium text-foreground mt-0.5">{item.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complainants</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {complainants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No complainants were returned.</p>
+                    ) : complainants.map((c: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 p-2.5 bg-muted rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{c.complainantName || 'Unknown'}{c.ageYear ? `, ${c.ageYear}` : ''}</p>
+                          <p className="text-xs text-secondary">{c.occupation?.occupationName || 'Occupation not available'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {fir.latitude && fir.longitude && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Location</CardTitle>
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-muted rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground">Coordinates</p>
+                        <p className="text-sm font-mono font-medium text-foreground mt-0.5">
+                          {fir.latitude}°N, {fir.longitude}°E
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">Map view — integrate React Leaflet here</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </AppShell>
   );

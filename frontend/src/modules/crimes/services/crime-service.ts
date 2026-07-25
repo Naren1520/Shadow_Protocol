@@ -1,5 +1,4 @@
 import { apiClient } from '@/shared/services/api-client';
-import type { CrimeFIR } from '@/shared/types/police-schema';
 
 export interface CrimeSearchQuery {
   crimeNo?: string;
@@ -8,6 +7,8 @@ export interface CrimeSearchQuery {
   caseStatusId?: number;
   fromDate?: string;
   toDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const crimeService = {
@@ -16,10 +17,10 @@ export const crimeService = {
   },
 
   async searchCrimes(query: CrimeSearchQuery) {
-    return apiClient.get<CrimeFIR[]>('/crimes/search', { params: query });
+    return apiClient.get<any>('/crimes/search', { params: query });
   },
 
   async getCrimeDetails(caseMasterId: number) {
-    return apiClient.get<CrimeFIR>(`/crimes/${caseMasterId}`);
+    return apiClient.get<any>(`/crimes/${caseMasterId}`);
   },
 };

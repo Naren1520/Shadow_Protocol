@@ -11,7 +11,6 @@ import {
   Users,
   BarChart3,
   Settings,
-  Shield,
   Network,
   Bot,
   BookOpen,

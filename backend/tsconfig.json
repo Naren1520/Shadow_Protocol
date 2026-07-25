@@ -21,6 +21,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "baseUrl": "./src",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./*"]
     }

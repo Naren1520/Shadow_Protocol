@@ -1,0 +1,6 @@
+# Wheel-compatible minimal runtime for Python 3.13 on Windows
+fastapi==0.115.0
+uvicorn==0.31.0
+pydantic==2.9.2
+python-dotenv==1.0.0
+requests==2.31.0

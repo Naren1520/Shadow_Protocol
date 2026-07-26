@@ -131,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true }) => {
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-5 border-b border-white/10 flex-shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shadow-lg bg-white/5 flex items-center justify-center">
-            <img src="/CID.jpg" alt="CID logo" className="w-full h-full object-cover" />
+            <img src="/img.svg" alt="CID logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="text-white font-bold text-sm leading-none">ShadowProtocol</p>

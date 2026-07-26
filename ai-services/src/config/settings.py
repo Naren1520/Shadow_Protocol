@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic.v1 import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -6,8 +6,10 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     ALLOWED_ORIGINS: str = "http://localhost:3000"
     OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+    LLM_PROVIDER: str = "gemini"
     VECTOR_DB_PATH: str = "./data/models/vector_db"
-    DEFAULT_LLM_MODEL: str = "gpt-4o-mini"
+    DEFAULT_LLM_MODEL: str = "gemini-2.0-flash"
     EMBEDDING_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 3002

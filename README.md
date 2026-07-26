@@ -109,63 +109,100 @@ Key documents:
 
 ## Setup and Local Development
 
-### Clone the repository
+The local development workflow in this repository is currently set up as three separate services:
+- Frontend: Next.js app
+- Backend: Fastify + TypeScript API
+- AI service: FastAPI + Python service
 
-```bash
+### Prerequisites
+
+- Node.js 20 or later
+- Python 3.11 or later
+- Docker Desktop
+- PowerShell (Windows) or your preferred shell
+
+### 1) Clone the repository
+
+```powershell
 git clone https://github.com/Naren1520/Shadow_Protocol.git
 cd ShadowProtocol
 ```
 
-### Frontend
+### 2) Install dependencies
 
-```bash
+```powershell
 cd frontend
-pnpm install
-pnpm dev
-```
+npm install
 
-The frontend runs by default on `http://localhost:3000`.
-
-### Backend
-
-```bash
 cd ../backend
-pnpm install
-cp .env.example .env
-# update the .env file with your database, Redis, and JWT values
-pnpm dev
-```
+npm install
+Copy-Item .env.example .env -Force
 
-The backend runs on the configured port, typically `http://localhost:3001`.
-
-### AI Service
-
-```bash
 cd ../ai-services
-pip install -r requirements.txt
-cp .env.example .env
-# set OPENAI_API_KEY if using LLM integration
-uvicorn src.main:app --reload --host 0.0.0.0 --port 3002
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-minimal.txt
+Copy-Item .env.example .env -Force
 ```
 
-The AI service runs on `http://localhost:3002` and is exposed to the backend through the `AI_SERVICE_URL` setting.
+### 3) Start the infrastructure services
 
-The backend proxies AI requests at `http://localhost:3001/api/v1/ai/*` to the standalone AI service.
-
-### Docker Compose
-
-```bash
-docker compose up -d
+```powershell
+cd ..
+docker compose up -d postgres redis
 ```
 
-This command starts the local integration stack with PostgreSQL, Redis, backend, frontend, and the AI service.
+This starts PostgreSQL and Redis locally.
 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:3001`
-- AI service (direct access): `http://localhost:3002`
-- Backend AI proxy: `http://localhost:3001/api/v1/ai/*`
+### 4) Start the services
 
-Verify the service ports and container status after startup.
+Open three separate terminals.
+
+#### Terminal 1 — Backend
+
+```powershell
+cd backend
+$env:PORT = "3101"
+npm run dev
+```
+
+Backend URL:
+- `http://localhost:3101`
+- Health check: `http://localhost:3101/health`
+
+#### Terminal 2 — AI service
+
+```powershell
+cd ai-services
+.\.venv\Scripts\Activate.ps1
+$env:GEMINI_API_KEY = "your-gemini-key"
+$env:PYTHONPATH = "."
+python -m uvicorn src.main:app --host 0.0.0.0 --port 3012
+```
+
+AI service URL:
+- `http://localhost:3012`
+- Health check: `http://localhost:3012/health`
+
+#### Terminal 3 — Frontend
+
+```powershell
+cd frontend
+npm run dev -- --port 3000
+```
+
+Frontend URL:
+- `http://localhost:3000`
+
+> If port 3000 is already in use, Next.js will choose the next available port and print the new URL.
+
+### 5) Stop everything
+
+```powershell
+docker compose down
+```
+
+Stop the frontend, backend, and AI service terminals with `Ctrl+C` when you are done.
 
 ### Zoho Catalyst Deployment
 

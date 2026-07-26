@@ -98,6 +98,8 @@ services:
       APP_HOST: 0.0.0.0
       APP_PORT: 3002
       ALLOWED_ORIGINS: http://localhost:3000,http://backend:3001
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
       - "3002:3002"

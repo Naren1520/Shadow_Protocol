@@ -1,6 +1,7 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
 from .config.settings import settings
 from .routes import chat_routes, analytics_routes, prediction_routes, network_routes
@@ -9,7 +10,7 @@ from .middleware.logging import setup_logging
 
 
 @asynccontextmanager
-def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):
     print("Starting ShadowProtocol AI services...")
     yield
     print("Shutting down ShadowProtocol AI services...")

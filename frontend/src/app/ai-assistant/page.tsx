@@ -115,11 +115,15 @@ export default function AIAssistantPage() {
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unable to process your request. The AI service is currently unavailable. Please try again in a moment.';
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content:
-          'Unable to process your request. The AI service is currently unavailable. Please try again in a moment.',
+        content: errorMessage,
         timestamp: new Date(),
         confidence: 0,
       };

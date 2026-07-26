@@ -8,8 +8,8 @@ import axios, {
 
 const API_BASE_URL =
   typeof window !== 'undefined'
-    ? process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1'
-    : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1';
+    ? process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3101/api/v1'
+    : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3101/api/v1';
 
 interface RequestConfig extends AxiosRequestConfig {
   requiresAuth?: boolean;
@@ -31,9 +31,13 @@ class APIClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
+        const isAiRoute = config.url?.includes('/ai/');
         const token = this.getAccessToken();
-        if (token) {
+        if (token && !isAiRoute) {
           config.headers.Authorization = `Bearer ${token}`;
+        }
+        if (isAiRoute) {
+          config.headers['x-local-dev'] = 'true';
         }
         return config;
       },

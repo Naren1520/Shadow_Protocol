@@ -16,7 +16,7 @@ Install dependencies:
 
 ```bash
 cd ai-services
-pip install -r requirements.txt
+pip install -r requirements-minimal.txt
 ```
 
 Run the app:

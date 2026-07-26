@@ -1,19 +1,18 @@
 # Multi-stage Backend Dockerfile
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN corepack enable pnpm
 
 # ---- Dependencies ----
 FROM base AS deps
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+COPY package*.json ./
+RUN npm ci
 
 # ---- Build ----
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run db:generate
-RUN pnpm run build
+RUN npm run db:generate
+RUN npm run build
 
 # ---- Runtime ----
 FROM node:20-alpine AS runner
